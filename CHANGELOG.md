@@ -369,6 +369,8 @@ All notable changes to the "vscode-pets" extension will be documented in this fi
 
 ## [0.2.0]
 
+test test
+
 - Added dogs. They won't climb the wall
 
 ## [0.1.0]
