@@ -15,14 +15,17 @@ import {
 import { randomName } from '../common/names';
 import * as localize from '../common/localize';
 import { availableColors, normalizeColor } from '../panel/pets';
+import { getSession } from '../common/credentials';
+import { Dog } from '../panel/pets/dog';
 
 const EXTRA_PETS_KEY = 'vscode-pets.extra-pets';
 const EXTRA_PETS_KEY_TYPES = EXTRA_PETS_KEY + '.types';
 const EXTRA_PETS_KEY_COLORS = EXTRA_PETS_KEY + '.colors';
 const EXTRA_PETS_KEY_NAMES = EXTRA_PETS_KEY + '.names';
+const EXP_KEY = 'vscode-pets.exp';
 const DEFAULT_PET_SCALE = PetSize.nano;
 const DEFAULT_COLOR = PetColor.brown;
-const DEFAULT_PET_TYPE = PetType.cat;
+const DEFAULT_PET_TYPE = PetType.dog;
 const DEFAULT_POSITION = ExtPosition.panel;
 const DEFAULT_THEME = Theme.none;
 
@@ -82,7 +85,7 @@ function getConfigurationPosition() {
 function getThrowWithMouseConfiguration(): boolean {
     return vscode.workspace
         .getConfiguration('vscode-pets')
-        .get<boolean>('throwBallWithMouse', true);
+        .get<boolean>('throwBallWithMouse', false);
 }
 
 function updatePanelThrowWithMouse(): void {
@@ -282,6 +285,57 @@ function getWebview(): vscode.Webview | undefined {
     }
 }
 
+async function refreshEgg(
+    ctx: vscode.ExtensionContext,
+    ignoreCurrentExp = false,
+) {
+    const session = await getSession();
+    if (!session || !session.accessToken) {
+        return;
+    }
+    const { accessToken } = session;
+    const res = await fetch('https://tamagitchi.vercel.app/api/tamagitchi', {
+        headers: {
+            // eslint-disable-next-line @typescript-eslint/naming-convention
+            Authorization: `Bearer ${accessToken}`,
+        },
+    });
+    if (res.status < 200 || res.status > 299) {
+        return;
+    }
+    const tamagitchi = await res.json();
+    const currentExp = ctx.globalState.get<Number>(EXP_KEY, 0);
+    if (tamagitchi.exp === currentExp && !ignoreCurrentExp) {
+        return;
+    }
+    await ctx.globalState.update(EXP_KEY, tamagitchi.exp);
+    const chosenColorIdx =
+        Math.floor(tamagitchi.exp / 100) < Dog.possibleColors.length
+            ? Math.floor(tamagitchi.exp / 100)
+            : Dog.possibleColors.length - 1;
+    const color = Dog.possibleColors[chosenColorIdx];
+    const existingPanel = getPetPanel();
+    if (!existingPanel) {
+        return PetPanel.createOrShow(
+            ctx.extensionUri,
+            color,
+            PetType.dog,
+            getConfiguredSize(),
+            getConfiguredTheme(),
+            getConfiguredThemeKind(),
+            getThrowWithMouseConfiguration(),
+        );
+    }
+    existingPanel.resetPets();
+    return existingPanel.spawnPet(
+        new PetSpecification(
+            color,
+            PetType.dog,
+            getConfiguredSize(),
+            'Tamagitchi',
+        ),
+    );
+}
 export function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(
         vscode.commands.registerCommand('vscode-pets.start', async () => {
@@ -321,7 +375,7 @@ export function activate(context: vscode.ExtensionContext) {
         vscode.StatusBarAlignment.Right,
         100,
     );
-    spawnPetStatusBar.command = 'vscode-pets.spawn-pet';
+    spawnPetStatusBar.command = 'vscode-pets.login';
     context.subscriptions.push(spawnPetStatusBar);
 
     context.subscriptions.push(
@@ -634,6 +688,25 @@ export function activate(context: vscode.ExtensionContext) {
         ),
     );
 
+    void vscode.window.withProgress(
+        {
+            location: vscode.ProgressLocation.Window,
+            cancellable: false,
+            title: 'Waking up Tamagitchi',
+        },
+        async (progress) => {
+            progress.report({ increment: 0 });
+            await refreshEgg(context, true);
+            progress.report({ increment: 100 });
+        },
+    );
+    setInterval(() => refreshEgg(context), 10000);
+    context.subscriptions.push(
+        vscode.commands.registerCommand('vscode-pets.login', () =>
+            refreshEgg(context),
+        ),
+    );
+
     if (vscode.window.registerWebviewPanelSerializer) {
         // Make sure we register a serializer in activation event
         vscode.window.registerWebviewPanelSerializer(PetPanel.viewType, {
@@ -659,8 +732,8 @@ export function activate(context: vscode.ExtensionContext) {
 }
 
 function updateStatusBar(): void {
-    spawnPetStatusBar.text = `$(squirrel)`;
-    spawnPetStatusBar.tooltip = vscode.l10n.t('Spawn Pet');
+    spawnPetStatusBar.text = `$(octoface)`;
+    spawnPetStatusBar.tooltip = vscode.l10n.t('Wake Tamagitchi');
     spawnPetStatusBar.show();
 }
 

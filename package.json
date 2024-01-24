@@ -1,6 +1,6 @@
 {
-    "name": "vscode-pets",
-    "displayName": "vscode-pets",
+    "name": "tamagitchi",
+    "displayName": "Tamagitchi",
     "description": "Pets for your VS Code",
     "version": "1.25.1",
     "engines": {
@@ -29,18 +29,8 @@
     "license": "MIT",
     "icon": "icon.png",
     "activationEvents": [
-        "onCommand:vscode-pets.start",
-        "onCommand:vscode-pets.throw-with-mouse",
-        "onCommand:vscode-pets.throw-ball",
-        "onCommand:vscode-pets.spawn-pet",
-        "onCommand:vscode-pets.delete-pet",
-        "onCommand:vscode-pets.remove-all-pets",
-        "onCommand:vscode-pets.roll-call",
-        "onCommand:vscode-pets.export-pet-list",
-        "onCommand:vscode-pets.import-pet-list",
         "onWebviewPanel:petCoding",
         "onView:explorer",
-        "onView:petsView",
         "onStartupFinished"
     ],
     "main": "./out/extension/extension.js",
@@ -51,144 +41,23 @@
                 {
                     "type": "webview",
                     "id": "petsView",
-                    "name": "VS Code Pets",
+                    "name": "Tamagitchi",
                     "when": "vscode-pets.position == 'explorer'",
                     "icon": "media/dog.svg"
                 }
             ]
         },
-        "menus": {
-            "view/title": [
-                {
-                    "command": "vscode-pets.spawn-pet",
-                    "when": "view == petsView",
-                    "group": "navigation@1"
-                },
-                {
-                    "command": "vscode-pets.throw-ball",
-                    "when": "view == petsView",
-                    "group": "navigation@2"
-                },
-                {
-                    "command": "vscode-pets.delete-pet",
-                    "when": "view == petsView",
-                    "group": "navigation@3"
-                }
-            ]
-        },
         "commands": [
             {
-                "command": "vscode-pets.start",
-                "title": "Start pet coding session",
-                "category": "Pet Coding",
+                "command": "vscode-pets.login",
+                "title": "Wake Up",
+                "category": "Tamagitchi",
                 "icon": "media/dog.svg"
-            },
-            {
-                "command": "vscode-pets.throw-with-mouse",
-                "title": "Throw ball with mouse",
-                "category": "Pet Coding",
-                "icon": {
-                    "dark": "media/icon/dark-throw-outline.svg",
-                    "light": "media/icon/light-throw-outline.svg"
-                }
-            },
-            {
-                "command": "vscode-pets.throw-ball",
-                "title": "Throw ball",
-                "category": "Pet Coding",
-                "icon": {
-                    "dark": "media/icon/dark-circle-outline.svg",
-                    "light": "media/icon/light-circle-outline.svg"
-                }
-            },
-            {
-                "command": "vscode-pets.export-pet-list",
-                "title": "Export pet list",
-                "category": "Pet Coding"
-            },
-            {
-                "command": "vscode-pets.import-pet-list",
-                "title": "Import pet list",
-                "category": "Pet Coding"
-            },
-            {
-                "command": "vscode-pets.spawn-pet",
-                "title": "Spawn additional pet",
-                "category": "Pet Coding",
-                "icon": {
-                    "dark": "media/icon/dark-add.svg",
-                    "light": "media/icon/light-add.svg"
-                }
-            },
-            {
-                "command": "vscode-pets.delete-pet",
-                "title": "Remove pet",
-                "category": "Pet Coding",
-                "icon": {
-                    "dark": "media/icon/dark-trash.svg",
-                    "light": "media/icon/light-trash.svg"
-                }
-            },
-            {
-                "command": "vscode-pets.remove-all-pets",
-                "title": "Remove all pets",
-                "category": "Pet Coding",
-                "icon": {
-                    "dark": "media/icon/dark-trash.svg",
-                    "light": "media/icon/light-trash.svg"
-                }
-            },
-            {
-                "command": "vscode-pets.roll-call",
-                "title": "Roll-call",
-                "category": "Pet Coding"
             }
         ],
         "configuration": [
             {
                 "properties": {
-                    "vscode-pets.petColor": {
-                        "type": "string",
-                        "enum": [
-                            "black",
-                            "lightbrown",
-                            "brown",
-                            "green",
-                            "yellow",
-                            "gray",
-                            "purple",
-                            "red",
-                            "white",
-                            "orange",
-                            "akita"
-                        ],
-                        "default": "brown",
-                        "description": "Pet color",
-                        "scope": "window"
-                    },
-                    "vscode-pets.petType": {
-                        "type": "string",
-                        "enum": [
-                            "cat",
-                            "chicken",
-                            "crab",
-                            "clippy",
-                            "cockatiel",
-                            "dog",
-                            "fox",
-                            "mod",
-                            "rat",
-                            "rocky",
-                            "rubber-duck",
-                            "snake",
-                            "totoro",
-                            "turtle",
-                            "zappy"
-                        ],
-                        "default": "cat",
-                        "description": "Pet type",
-                        "scope": "window"
-                    },
                     "vscode-pets.petSize": {
                         "type": "string",
                         "enum": [
@@ -219,11 +88,6 @@
                         ],
                         "default": "none",
                         "description": "Background theme assets for your pets"
-                    },
-                    "vscode-pets.throwBallWithMouse": {
-                        "type": "boolean",
-                        "default": false,
-                        "description": "Throw ball with mouse"
                     }
                 }
             }
@@ -276,6 +140,7 @@
         "webpack-cli": "^4.10.0"
     },
     "dependencies": {
+        "@octokit/rest": "^20.0.2",
         "@vscode/l10n": "^0.0.10"
     }
 }
