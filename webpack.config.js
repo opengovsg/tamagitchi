@@ -1,4 +1,4 @@
-//webpack.config.js
+// webpack.config.js
 const path = require('path');
 const webpack = require('webpack');
 var removeSourceMapUrlWebpackPlugin = require('@rbarilani/remove-source-map-url-webpack-plugin');

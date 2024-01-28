@@ -76,6 +76,7 @@ export const enum States {
     idleWithBall = 'idle-with-ball',
     chase = 'chase',
     chaseFriend = 'chase-friend',
+    bounce = 'bounce',
 }
 
 export enum FrameResult {

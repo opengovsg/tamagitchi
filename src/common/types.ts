@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/naming-convention */
 export const enum PetColor {
     brown = 'brown',
     lightbrown = 'lightbrown',
@@ -11,6 +12,31 @@ export const enum PetColor {
     orange = 'orange',
     akita = 'akita',
     null = 'null',
+
+    chawanmushi_plain = 'chawanmushi_plain',
+    chawanmushi_cool = 'chawanmushi_cool',
+    chawanmushi_rabbit = 'chawanmushi_rabbit',
+    chawanmushi_reindeer = 'chawanmushi_reindeer',
+    chawanmushi_dog = 'chawanmushi_dog',
+    chawanmushi_potter = 'chawanmushi_potter',
+    unhatched_plain = 'unhatched_plain',
+    unhatched_cool = 'unhatched_cool',
+    unhatched_rabbit = 'unhatched_rabbit',
+    unhatched_reindeer = 'unhatched_reindeer',
+    unhatched_dog = 'unhatched_dog',
+    unhatched_potter = 'unhatched_potter',
+    fried_plain = 'fried_plain',
+    fried_cool = 'fried_cool',
+    fried_rabbit = 'fried_rabbit',
+    fried_reindeer = 'fried_reindeer',
+    fried_dog = 'fried_dog',
+    fried_potter = 'fried_potter',
+    tamago_plain = 'tamago_plain',
+    tamago_cool = 'tamago_cool',
+    tamago_rabbit = 'tamago_rabbit',
+    tamago_reindeer = 'tamago_reindeer',
+    tamago_dog = 'tamago_dog',
+    tamago_potter = 'tamago_potter',
 }
 
 export const enum PetType {
@@ -30,6 +56,7 @@ export const enum PetType {
     turtle = 'turtle',
     zappy = 'zappy',
     null = 'null',
+    egg = 'egg',
 }
 
 export const enum PetSpeed {

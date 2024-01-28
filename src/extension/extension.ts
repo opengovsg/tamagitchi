@@ -16,13 +16,14 @@ import { randomName } from '../common/names';
 import * as localize from '../common/localize';
 import { availableColors, normalizeColor } from '../panel/pets';
 import { getSession } from '../common/credentials';
-import { Dog } from '../panel/pets/dog';
+import { Egg } from '../panel/pets/egg';
 
 const EXTRA_PETS_KEY = 'vscode-pets.extra-pets';
 const EXTRA_PETS_KEY_TYPES = EXTRA_PETS_KEY + '.types';
 const EXTRA_PETS_KEY_COLORS = EXTRA_PETS_KEY + '.colors';
 const EXTRA_PETS_KEY_NAMES = EXTRA_PETS_KEY + '.names';
 const EXP_KEY = 'vscode-pets.exp';
+const COSTUME_KEY = 'vscode-pets.costume';
 const DEFAULT_PET_SCALE = PetSize.nano;
 const DEFAULT_COLOR = PetColor.brown;
 const DEFAULT_PET_TYPE = PetType.dog;
@@ -285,10 +286,7 @@ function getWebview(): vscode.Webview | undefined {
     }
 }
 
-async function refreshEgg(
-    ctx: vscode.ExtensionContext,
-    ignoreCurrentExp = false,
-) {
+async function refreshEgg(ctx: vscode.ExtensionContext) {
     const session = await getSession();
     if (!session || !session.accessToken) {
         return;
@@ -304,22 +302,30 @@ async function refreshEgg(
         return;
     }
     const tamagitchi = await res.json();
-    const currentExp = ctx.globalState.get<Number>(EXP_KEY, 0);
-    if (tamagitchi.exp === currentExp && !ignoreCurrentExp) {
+    const currentExp = ctx.globalState.get<number>(EXP_KEY, 0);
+    if (tamagitchi.exp === currentExp) {
         return;
     }
+    const evolutionLevel = Math.floor(currentExp / 100);
+    const evolutionIdx =
+        Egg.evolutions.length > evolutionLevel
+            ? evolutionLevel
+            : Egg.evolutions.length - 1;
+    const evolution = Egg.evolutions[evolutionIdx];
     await ctx.globalState.update(EXP_KEY, tamagitchi.exp);
-    const chosenColorIdx =
-        Math.floor(tamagitchi.exp / 100) < Dog.possibleColors.length
-            ? Math.floor(tamagitchi.exp / 100)
-            : Dog.possibleColors.length - 1;
-    const color = Dog.possibleColors[chosenColorIdx];
+    let currentCostume = ctx.globalState.get<string>(COSTUME_KEY);
+    if (!currentCostume) {
+        currentCostume =
+            Egg.costumes[Math.floor(Math.random() * Egg.costumes.length)];
+        await ctx.globalState.update(COSTUME_KEY, currentCostume);
+    }
+    ctx.globalState.setKeysForSync([EXP_KEY, COSTUME_KEY]);
     const existingPanel = getPetPanel();
     if (!existingPanel) {
         return PetPanel.createOrShow(
             ctx.extensionUri,
-            color,
-            PetType.dog,
+            `${evolution}_${currentCostume}` as PetColor,
+            PetType.egg,
             getConfiguredSize(),
             getConfiguredTheme(),
             getConfiguredThemeKind(),
@@ -329,8 +335,8 @@ async function refreshEgg(
     existingPanel.resetPets();
     return existingPanel.spawnPet(
         new PetSpecification(
-            color,
-            PetType.dog,
+            `${evolution}_${currentCostume}` as PetColor,
+            PetType.egg,
             getConfiguredSize(),
             'Tamagitchi',
         ),
@@ -696,7 +702,7 @@ export function activate(context: vscode.ExtensionContext) {
         },
         async (progress) => {
             progress.report({ increment: 0 });
-            await refreshEgg(context, true);
+            await refreshEgg(context);
             progress.report({ increment: 100 });
         },
     );
