@@ -25,8 +25,8 @@ const EXTRA_PETS_KEY_NAMES = EXTRA_PETS_KEY + '.names';
 const EXP_KEY = 'vscode-pets.exp';
 const COSTUME_KEY = 'vscode-pets.costume';
 const DEFAULT_PET_SCALE = PetSize.nano;
-const DEFAULT_COLOR = PetColor.brown;
-const DEFAULT_PET_TYPE = PetType.dog;
+const DEFAULT_COLOR = PetColor.unhatched_plain;
+const DEFAULT_PET_TYPE = PetType.egg;
 const DEFAULT_POSITION = ExtPosition.panel;
 const DEFAULT_THEME = Theme.none;
 
@@ -302,11 +302,11 @@ async function refreshEgg(ctx: vscode.ExtensionContext) {
         return;
     }
     const tamagitchi = await res.json();
-    const currentExp = ctx.globalState.get<number>(EXP_KEY, 0);
+    const currentExp = ctx.globalState.get<number>(EXP_KEY);
     if (tamagitchi.exp === currentExp) {
         return;
     }
-    const evolutionLevel = Math.floor(currentExp / 100);
+    const evolutionLevel = Math.floor(tamagitchi.exp / 100);
     const evolutionIdx =
         Egg.evolutions.length > evolutionLevel
             ? evolutionLevel
@@ -343,39 +343,39 @@ async function refreshEgg(ctx: vscode.ExtensionContext) {
     );
 }
 export function activate(context: vscode.ExtensionContext) {
-    context.subscriptions.push(
-        vscode.commands.registerCommand('vscode-pets.start', async () => {
-            if (
-                getConfigurationPosition() === ExtPosition.explorer &&
-                webviewViewProvider
-            ) {
-                await vscode.commands.executeCommand('petsView.focus');
-            } else {
-                const spec = PetSpecification.fromConfiguration();
-                PetPanel.createOrShow(
-                    context.extensionUri,
-                    spec.color,
-                    spec.type,
-                    spec.size,
-                    getConfiguredTheme(),
-                    getConfiguredThemeKind(),
-                    getThrowWithMouseConfiguration(),
-                );
+    // context.subscriptions.push(
+    //     vscode.commands.registerCommand('vscode-pets.start', async () => {
+    //         if (
+    //             getConfigurationPosition() === ExtPosition.explorer &&
+    //             webviewViewProvider
+    //         ) {
+    //             await vscode.commands.executeCommand('petsView.focus');
+    //         } else {
+    //             const spec = PetSpecification.fromConfiguration();
+    //             PetPanel.createOrShow(
+    //                 context.extensionUri,
+    //                 spec.color,
+    //                 spec.type,
+    //                 spec.size,
+    //                 getConfiguredTheme(),
+    //                 getConfiguredThemeKind(),
+    //                 getThrowWithMouseConfiguration(),
+    //             );
 
-                if (PetPanel.currentPanel) {
-                    var collection = PetSpecification.collectionFromMemento(
-                        context,
-                        getConfiguredSize(),
-                    );
-                    collection.forEach((item) => {
-                        PetPanel.currentPanel?.spawnPet(item);
-                    });
-                    // Store the collection in the memento, incase any of the null values (e.g. name) have been set
-                    await storeCollectionAsMemento(context, collection);
-                }
-            }
-        }),
-    );
+    //             if (PetPanel.currentPanel) {
+    //                 var collection = PetSpecification.collectionFromMemento(
+    //                     context,
+    //                     getConfiguredSize(),
+    //                 );
+    //                 collection.forEach((item) => {
+    //                     PetPanel.currentPanel?.spawnPet(item);
+    //                 });
+    //                 // Store the collection in the memento, incase any of the null values (e.g. name) have been set
+    //                 await storeCollectionAsMemento(context, collection);
+    //             }
+    //         }
+    //     }),
+    // );
 
     spawnPetStatusBar = vscode.window.createStatusBarItem(
         vscode.StatusBarAlignment.Right,
