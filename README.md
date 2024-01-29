@@ -1,6 +1,6 @@
 <div align='center'>
 
-# VS Code Pets
+# VS Code Pets Another PR
 
 ![icon](https://github.com/tonybaloney/vscode-pets/raw/master/icon.png)
 </div>    
