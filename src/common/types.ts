@@ -141,3 +141,20 @@ export const ALL_SCALES = [
     PetSize.large,
 ];
 export const ALL_THEMES = [Theme.none, Theme.forest, Theme.castle, Theme.beach];
+
+export type EggInfo = {
+    username: string;
+    evolution: string;
+    costume: string;
+};
+
+export type EggEvoleMessage = {
+    type: 'evolve';
+    evolution: string;
+    costume: string;
+};
+export type EggSpeechMessage = {
+    type: 'speech';
+    message: string;
+};
+export type EggMessage = EggEvoleMessage | EggSpeechMessage;

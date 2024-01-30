@@ -146,23 +146,25 @@ img.pet {
 	border: 2px solid #333;
 	border-radius: 10px;
 	padding: 10px;
+	color: black;
+	font-size: 4px;
 }
 
-.bubble-nano {
-	font-size: 9px;
+/* .bubble-nano {
+	font-size: 4px;
 }
 
 .bubble-small {
-	font-size: 10px;
+	font-size: 5px;
 }
 
 .bubble-medium {
-	font-size: 12px;
+	font-size: 6px;
 }
 
 .bubble-large {
-	font-size: 16px;
-}
+	font-size: 8px;
+} */
 
 .bubble:before,
 .bubble:after {

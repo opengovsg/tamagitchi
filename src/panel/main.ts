@@ -7,6 +7,8 @@ import {
     Theme,
     ColorThemeKind,
     WebviewMessage,
+    EggInfo,
+    EggMessage,
 } from '../common/types';
 import { IPetType } from './states';
 import {
@@ -18,7 +20,7 @@ import {
     InvalidPetException,
 } from './pets';
 import { BallState, PetElementState, PetPanelState } from './states';
-import { initPusher, sendPushMessage } from './chat';
+import { initPusher, rageQuit, sendPushMessage } from './chat';
 
 /* This is how the VS Code API can be invoked from the panel */
 declare global {
@@ -522,6 +524,8 @@ export function petPanelApp(
         dynamicThrowOff();
     }
 
+    let entered = false;
+    let myTamagoId: string;
     // Handle messages sent from the extension to the webview
     window.addEventListener('message', (event): void => {
         const message = event.data; // The json data that the extension sent
@@ -582,14 +586,10 @@ export function petPanelApp(
                     });
                 });
             case 'delete-pet':
-                var pet = allPets.locate(message.name);
+                const pet = allPets.locate(message.name);
                 if (pet) {
                     allPets.remove(message.name);
                     saveState(stateApi);
-                    stateApi?.postMessage({
-                        command: 'info',
-                        text: '👋 Removed pet ' + message.name,
-                    });
                 } else {
                     stateApi?.postMessage({
                         command: 'error',
@@ -606,12 +606,119 @@ export function petPanelApp(
                 petCounter = 1;
                 saveState(stateApi);
                 break;
-
+            case 'update-my-egg':
+                allPets
+                    .locate(myTamagoId)
+                    ?.pet.updateTypeAndColor(
+                        message.evolution,
+                        message.costume,
+                    );
+                break;
+            case 'kill-my-egg':
+                rageQuit();
+                const myPetToKill = allPets.locate(myTamagoId);
+                if (myPetToKill) {
+                    allPets.remove(myTamagoId);
+                    saveState(stateApi);
+                    entered = false;
+                }
+                break;
             case 'push-message':
-                sendPushMessage(message.message);
+                console.log('push', myTamagoId, message, allPets);
+                sendPushMessage(message.data);
+                if (message.data.type === 'speech') {
+                    allPets
+                        .locate(myTamagoId)
+                        ?.pet.showSpeechBubble(
+                            `${myTamagoId}:\n${message.data.message}`,
+                            3000,
+                        );
+                }
                 break;
             case 'enter-chat':
-                initPusher(message.accessToken);
+                if (entered) {
+                    break;
+                }
+                const channel = initPusher(
+                    message.accessToken,
+                    message.eggInfo,
+                );
+                console.log(entered, 'members', channel.members);
+                channel.bind(
+                    'pusher:subscription_succeeded',
+                    ({ myID, members }: { myID: string; members: any }) => {
+                        myTamagoId = myID;
+                        Object.keys(members).forEach((id) => {
+                            const { evolution, costume } = JSON.parse(
+                                members[id].eggInfo,
+                            ) as EggInfo;
+                            allPets.push(
+                                addPetToPanel(
+                                    PetType.egg,
+                                    basePetUri,
+                                    `${evolution}_${costume}` as PetColor,
+                                    petSize,
+                                    randomStartPosition(),
+                                    floor,
+                                    floor,
+                                    id,
+                                    stateApi,
+                                ),
+                            );
+                            saveState(stateApi);
+                        });
+                    },
+                );
+                channel.bind(
+                    'client-new-message',
+                    function (
+                        data: EggMessage,
+                        // eslint-disable-next-line @typescript-eslint/naming-convention
+                        { user_id: userId }: { user_id: string },
+                    ) {
+                        if (data.type === 'speech') {
+                            allPets
+                                .locate(userId)
+                                ?.pet.showSpeechBubble(data.message, 3);
+                        } else if (data.type === 'evolve') {
+                            allPets
+                                .locate(userId)
+                                ?.pet.updateTypeAndColor(
+                                    data.evolution,
+                                    data.costume,
+                                );
+                        }
+                    },
+                );
+                channel.bind('pusher:member_added', (member: any) => {
+                    const { evolution, costume, username } = JSON.parse(
+                        member.eggInfo,
+                    ) as EggInfo;
+                    allPets.push(
+                        addPetToPanel(
+                            PetType.egg,
+                            basePetUri,
+                            `${evolution}_${costume}` as PetColor,
+                            petSize,
+                            randomStartPosition(),
+                            floor,
+                            floor,
+                            username,
+                            stateApi,
+                        ),
+                    );
+                    saveState(stateApi);
+                });
+
+                channel.bind('pusher:member_removed', (member: any) => {
+                    const { username } = JSON.parse(member.eggInfo) as EggInfo;
+                    const pet = allPets.locate(username);
+                    if (pet) {
+                        allPets.remove(username);
+                        saveState(stateApi);
+                    }
+                });
+                entered = true;
         }
     });
 }

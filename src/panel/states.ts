@@ -34,6 +34,7 @@ export interface IPetType {
     isPlaying: boolean;
 
     showSpeechBubble(message: string, duration: number): void;
+    updateTypeAndColor(evolution: string, costume: string): void;
 }
 
 export class PetInstanceState {
@@ -269,7 +270,7 @@ export class BounceState implements IState {
             return FrameResult.stateContinue;
         }
         const v = 2 - this.frameCounter;
-        const yPos = this.pet.bottom + (v * this.pet.width) / 32;
+        const yPos = this.pet.bottom + (v * Math.abs(v) * this.pet.width) / 32;
         this.pet.positionBottom(yPos);
         this.pet.positionBottom;
         this.frameCounter = (this.frameCounter + 1) % 5;

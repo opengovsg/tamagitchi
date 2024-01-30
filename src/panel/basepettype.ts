@@ -232,6 +232,20 @@ export abstract class BasePetType implements IPetType {
         this.el.src = `${this.petRoot}_${face}_8fps.gif`;
     }
 
+    // hacky for eggs only
+    updateTypeAndColor(evolution: string, costume: string) {
+        if (!this.petRoot.includes('egg/')) {
+            return;
+        } else if (
+            this.el.src.endsWith(`${evolution}_${costume}_idle_8fps.gif`)
+        ) {
+            return;
+        }
+        this.el.src =
+            this.el.src.split('egg/')[0] +
+            `egg/${evolution}_${costume}_idle_8fps.gif`;
+    }
+
     chooseNextState(fromState: States): States {
         // Work out next state
         var possibleNextStates: States[] | undefined = undefined;

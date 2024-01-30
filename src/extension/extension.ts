@@ -11,6 +11,8 @@ import {
     ALL_PETS,
     ALL_SCALES,
     ALL_THEMES,
+    EggInfo,
+    EggMessage,
 } from '../common/types';
 import { randomName } from '../common/names';
 import { normalizeColor } from '../panel/pets';
@@ -287,6 +289,7 @@ function getWebview(): vscode.Webview | undefined {
     }
 }
 
+let entered = false;
 async function refreshEgg(ctx: vscode.ExtensionContext) {
     const session = await getSession();
     if (!session || !session.accessToken) {
@@ -303,10 +306,6 @@ async function refreshEgg(ctx: vscode.ExtensionContext) {
         return;
     }
     const tamagitchi = await res.json();
-    const currentExp = ctx.globalState.get<number>(EXP_KEY);
-    if (tamagitchi.exp === currentExp) {
-        return;
-    }
     const evolutionLevel = Math.floor(tamagitchi.exp / 100);
     const evolutionIdx =
         Egg.evolutions.length > evolutionLevel
@@ -320,31 +319,27 @@ async function refreshEgg(ctx: vscode.ExtensionContext) {
             Egg.costumes[Math.floor(Math.random() * Egg.costumes.length)];
         await ctx.globalState.update(COSTUME_KEY, currentCostume);
     }
-    ctx.globalState.setKeysForSync([EXP_KEY, COSTUME_KEY]);
-    const existingPanel = getPetPanel();
-    if (!existingPanel) {
-        return PetPanel.createOrShow(
-            ctx.extensionUri,
-            `${evolution}_${currentCostume}` as PetColor,
-            PetType.egg,
-            getConfiguredSize(),
-            getConfiguredTheme(),
-            getConfiguredThemeKind(),
-            getThrowWithMouseConfiguration(),
-        );
+    await ctx.globalState.setKeysForSync([EXP_KEY, COSTUME_KEY]);
+    const panel = getPetPanel();
+    console.log('entered', entered, currentCostume);
+    if (!entered) {
+        console.log({
+            username: tamagitchi.username,
+            evolution,
+            costume: currentCostume,
+        });
+        panel?.resetPets();
+        panel?.enterChat({
+            username: tamagitchi.username,
+            evolution,
+            costume: currentCostume,
+        });
+        entered = true;
+        return;
     }
-    existingPanel.resetPets();
-    return existingPanel.spawnPet(
-        new PetSpecification(
-            `${evolution}_${currentCostume}` as PetColor,
-            PetType.egg,
-            getConfiguredSize(),
-            'Tamagitchi',
-        ),
-    );
+    panel?.updateMyEgg({ evolution, costume: currentCostume });
 }
 async function resetEgg(ctx: vscode.ExtensionContext) {
-    getPetPanel()?.resetPets();
     const session = await getSession();
     if (!session || !session.accessToken) {
         return;
@@ -363,6 +358,8 @@ async function resetEgg(ctx: vscode.ExtensionContext) {
     await ctx.globalState.update(EXP_KEY, undefined);
     await ctx.globalState.update(COSTUME_KEY, undefined);
     await ctx.globalState.setKeysForSync([EXP_KEY, COSTUME_KEY]);
+    getPetPanel()?.killMyEgg();
+    entered = false;
 }
 
 export function activate(context: vscode.ExtensionContext) {
@@ -407,8 +404,6 @@ export function activate(context: vscode.ExtensionContext) {
         ),
     );
 
-    void webviewViewProvider.enterChat('');
-
     context.subscriptions.push(
         vscode.commands.registerCommand(
             'vscode-pets.push-message',
@@ -419,7 +414,10 @@ export function activate(context: vscode.ExtensionContext) {
                     prompt: vscode.l10n.t('Say hello'),
                 });
                 if (panel !== undefined && !!message) {
-                    panel.sendPushMessage(message);
+                    panel.sendPushMessage({
+                        type: 'speech',
+                        message,
+                    });
                 }
             },
         ),
@@ -544,8 +542,11 @@ interface IPetPanel {
     updatePetSize(newSize: PetSize): void;
     updateTheme(newTheme: Theme, themeKind: vscode.ColorThemeKind): void;
     update(): void;
-    sendPushMessage(msg: string): void;
+    enterChat(info: EggInfo): void;
+    sendPushMessage(msg: EggMessage): void;
     setThrowWithMouse(newThrowWithMouse: boolean): void;
+    updateMyEgg(updates: Omit<EggInfo, 'username'>): void;
+    killMyEgg(): void;
 }
 
 class PetWebviewContainer implements IPetPanel {
@@ -676,7 +677,7 @@ class PetWebviewContainer implements IPetPanel {
 
     public update() {}
 
-    public async enterChat(eggInfo: string) {
+    public async enterChat(eggInfo: EggInfo) {
         const session = await getSession();
         if (session && session.accessToken) {
             void this.getWebview().postMessage({
@@ -687,11 +688,22 @@ class PetWebviewContainer implements IPetPanel {
         }
     }
 
-    public sendPushMessage(message: string) {
+    public sendPushMessage(data: EggMessage) {
         void this.getWebview().postMessage({
             command: 'push-message',
-            message,
+            data,
         });
+    }
+
+    public updateMyEgg({ evolution, costume }: Omit<EggInfo, 'username'>) {
+        return this.getWebview().postMessage({
+            command: 'update-my-egg',
+            evolution,
+            costume,
+        });
+    }
+    public killMyEgg() {
+        return this.getWebview().postMessage({ command: 'kill-my-egg' });
     }
 
     protected _getHtmlForWebview(webview: vscode.Webview) {
