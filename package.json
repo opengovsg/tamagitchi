@@ -53,6 +53,12 @@
                 "title": "Wake Up",
                 "category": "Tamagitchi",
                 "icon": "media/dog.svg"
+            },
+            {
+                "command": "vscode-pets.kill",
+                "title": "Terminate",
+                "category": "Tamagitchi",
+                "icon": "media/dog.svg"
             }
         ],
         "configuration": [

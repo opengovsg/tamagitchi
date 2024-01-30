@@ -139,6 +139,8 @@ export function resolveState(state: string, pet: IPetType): IState {
             return new IdleWithBallState(pet);
         case States.chaseFriend:
             return new ChaseFriendState(pet);
+        case States.bounce:
+            return new BounceState(pet);
     }
     return new SitIdleState(pet);
 }
@@ -245,6 +247,32 @@ export class WalkRightState implements IState {
         } else if (!this.pet.isMoving && this.idleCounter > this.holdTime) {
             return FrameResult.stateComplete;
         }
+        return FrameResult.stateContinue;
+    }
+}
+
+export class BounceState implements IState {
+    label = States.bounce;
+    pet: IPetType;
+    spriteLabel = 'idle';
+    horizontalDirection = HorizontalDirection.right;
+    holdTime = 60;
+    frameCounter: number;
+
+    constructor(pet: IPetType) {
+        this.pet = pet;
+        this.frameCounter = 0;
+    }
+
+    nextFrame(): FrameResult {
+        if (this.pet.width === 0) {
+            return FrameResult.stateContinue;
+        }
+        const v = 2 - this.frameCounter;
+        const yPos = this.pet.bottom + (v * this.pet.width) / 16;
+        this.pet.positionBottom(yPos);
+        this.pet.positionBottom;
+        this.frameCounter = (this.frameCounter + 1) % 5;
         return FrameResult.stateContinue;
     }
 }

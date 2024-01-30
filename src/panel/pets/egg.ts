@@ -37,7 +37,11 @@ export class Egg extends BasePetType {
         sequenceStates: [
             {
                 state: States.sitIdle,
-                possibleNextStates: [States.sitIdle],
+                possibleNextStates: [States.bounce],
+            },
+            {
+                state: States.bounce,
+                possibleNextStates: [States.bounce],
             },
         ],
     };

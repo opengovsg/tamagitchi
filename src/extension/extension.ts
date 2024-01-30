@@ -342,6 +342,12 @@ async function refreshEgg(ctx: vscode.ExtensionContext) {
         ),
     );
 }
+async function resetEgg(ctx: vscode.ExtensionContext) {
+    getPetPanel()?.resetPets();
+    await ctx.globalState.update(EXP_KEY, undefined);
+    await ctx.globalState.update(COSTUME_KEY, undefined);
+    await ctx.globalState.setKeysForSync([EXP_KEY, COSTUME_KEY]);
+}
 export function activate(context: vscode.ExtensionContext) {
     // context.subscriptions.push(
     //     vscode.commands.registerCommand('vscode-pets.start', async () => {
@@ -710,6 +716,11 @@ export function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(
         vscode.commands.registerCommand('vscode-pets.login', () =>
             refreshEgg(context),
+        ),
+    );
+    context.subscriptions.push(
+        vscode.commands.registerCommand('vscode-pets.kill', () =>
+            resetEgg(context),
         ),
     );
 

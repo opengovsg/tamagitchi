@@ -235,12 +235,15 @@ export abstract class BasePetType implements IPetType {
     chooseNextState(fromState: States): States {
         // Work out next state
         var possibleNextStates: States[] | undefined = undefined;
+        console.log(this.sequence);
         for (var i = 0; i < this.sequence.sequenceStates.length; i++) {
+            console.log(this.sequence.sequenceStates, i, fromState);
             if (this.sequence.sequenceStates[i].state === fromState) {
                 possibleNextStates =
                     this.sequence.sequenceStates[i].possibleNextStates;
             }
         }
+        console.log(possibleNextStates, !possibleNextStates);
         if (!possibleNextStates) {
             throw new InvalidStateException();
         }
