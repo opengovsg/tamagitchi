@@ -269,7 +269,7 @@ export class BounceState implements IState {
             return FrameResult.stateContinue;
         }
         const v = 2 - this.frameCounter;
-        const yPos = this.pet.bottom + (v * this.pet.width) / 16;
+        const yPos = this.pet.bottom + (v * this.pet.width) / 32;
         this.pet.positionBottom(yPos);
         this.pet.positionBottom;
         this.frameCounter = (this.frameCounter + 1) % 5;

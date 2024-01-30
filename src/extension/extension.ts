@@ -344,6 +344,21 @@ async function refreshEgg(ctx: vscode.ExtensionContext) {
 }
 async function resetEgg(ctx: vscode.ExtensionContext) {
     getPetPanel()?.resetPets();
+    const session = await getSession();
+    if (!session || !session.accessToken) {
+        return;
+    }
+    const { accessToken } = session;
+    const res = await fetch('https://tamagitchi.vercel.app/api/tamagitchi', {
+        method: 'DELETE',
+        headers: {
+            // eslint-disable-next-line @typescript-eslint/naming-convention
+            Authorization: `Bearer ${accessToken}`,
+        },
+    });
+    if (res.status < 200 || res.status > 299) {
+        return;
+    }
     await ctx.globalState.update(EXP_KEY, undefined);
     await ctx.globalState.update(COSTUME_KEY, undefined);
     await ctx.globalState.setKeysForSync([EXP_KEY, COSTUME_KEY]);
