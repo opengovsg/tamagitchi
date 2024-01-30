@@ -18,6 +18,7 @@ import {
     InvalidPetException,
 } from './pets';
 import { BallState, PetElementState, PetPanelState } from './states';
+import { initPusher, sendPushMessage } from './chat';
 
 /* This is how the VS Code API can be invoked from the panel */
 declare global {
@@ -27,6 +28,11 @@ declare global {
         postMessage(message: WebviewMessage): void;
     }
     function acquireVsCodeApi(): VscodeStateApi;
+
+    interface Window {
+        // eslint-disable-next-line @typescript-eslint/naming-convention
+        Pusher: any;
+    }
 }
 
 export var allPets: IPetCollection = new PetCollection();
@@ -600,6 +606,12 @@ export function petPanelApp(
                 petCounter = 1;
                 saveState(stateApi);
                 break;
+
+            case 'push-message':
+                sendPushMessage(message.message);
+                break;
+            case 'enter-chat':
+                initPusher(message.accessToken);
         }
     });
 }

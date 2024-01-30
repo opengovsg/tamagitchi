@@ -13,8 +13,7 @@ import {
     ALL_THEMES,
 } from '../common/types';
 import { randomName } from '../common/names';
-import * as localize from '../common/localize';
-import { availableColors, normalizeColor } from '../panel/pets';
+import { normalizeColor } from '../panel/pets';
 import { getSession } from '../common/credentials';
 import { Egg } from '../panel/pets/egg';
 
@@ -199,6 +198,7 @@ interface IPetInfo {
     color: PetColor;
 }
 
+// eslint-disable-next-line no-unused-vars
 async function handleRemovePetMessage(
     this: vscode.ExtensionContext,
     message: WebviewMessage,
@@ -275,6 +275,7 @@ function getPetPanel(): IPetPanel | undefined {
     }
 }
 
+// eslint-disable-next-line no-unused-vars
 function getWebview(): vscode.Webview | undefined {
     if (
         getConfigurationPosition() === ExtPosition.explorer &&
@@ -363,41 +364,8 @@ async function resetEgg(ctx: vscode.ExtensionContext) {
     await ctx.globalState.update(COSTUME_KEY, undefined);
     await ctx.globalState.setKeysForSync([EXP_KEY, COSTUME_KEY]);
 }
+
 export function activate(context: vscode.ExtensionContext) {
-    // context.subscriptions.push(
-    //     vscode.commands.registerCommand('vscode-pets.start', async () => {
-    //         if (
-    //             getConfigurationPosition() === ExtPosition.explorer &&
-    //             webviewViewProvider
-    //         ) {
-    //             await vscode.commands.executeCommand('petsView.focus');
-    //         } else {
-    //             const spec = PetSpecification.fromConfiguration();
-    //             PetPanel.createOrShow(
-    //                 context.extensionUri,
-    //                 spec.color,
-    //                 spec.type,
-    //                 spec.size,
-    //                 getConfiguredTheme(),
-    //                 getConfiguredThemeKind(),
-    //                 getThrowWithMouseConfiguration(),
-    //             );
-
-    //             if (PetPanel.currentPanel) {
-    //                 var collection = PetSpecification.collectionFromMemento(
-    //                     context,
-    //                     getConfiguredSize(),
-    //                 );
-    //                 collection.forEach((item) => {
-    //                     PetPanel.currentPanel?.spawnPet(item);
-    //                 });
-    //                 // Store the collection in the memento, incase any of the null values (e.g. name) have been set
-    //                 await storeCollectionAsMemento(context, collection);
-    //             }
-    //         }
-    //     }),
-    // );
-
     spawnPetStatusBar = vscode.window.createStatusBarItem(
         vscode.StatusBarAlignment.Right,
         100,
@@ -439,241 +407,19 @@ export function activate(context: vscode.ExtensionContext) {
         ),
     );
 
-    context.subscriptions.push(
-        vscode.commands.registerCommand('vscode-pets.throw-ball', () => {
-            const panel = getPetPanel();
-            if (panel !== undefined) {
-                panel.throwBall();
-            }
-        }),
-    );
-
-    context.subscriptions.push(
-        vscode.commands.registerCommand('vscode-pets.delete-pet', async () => {
-            const panel = getPetPanel();
-            if (panel !== undefined) {
-                panel.listPets();
-                getWebview()?.onDidReceiveMessage(
-                    handleRemovePetMessage,
-                    context,
-                );
-            } else {
-                await createPetPlayground(context);
-            }
-        }),
-    );
-
-    context.subscriptions.push(
-        vscode.commands.registerCommand('vscode-pets.roll-call', async () => {
-            const panel = getPetPanel();
-            if (panel !== undefined) {
-                panel.rollCall();
-            } else {
-                await createPetPlayground(context);
-            }
-        }),
-    );
+    void webviewViewProvider.enterChat();
 
     context.subscriptions.push(
         vscode.commands.registerCommand(
-            'vscode-pets.export-pet-list',
-            async () => {
-                const pets = PetSpecification.collectionFromMemento(
-                    context,
-                    getConfiguredSize(),
-                );
-                const petJson = JSON.stringify(pets, null, 2);
-                const fileName = `pets-${Date.now()}.json`;
-                if (!vscode.workspace.workspaceFolders) {
-                    await vscode.window.showErrorMessage(
-                        vscode.l10n.t(
-                            'You must have a folder or workspace open to export pets.',
-                        ),
-                    );
-                    return;
-                }
-                const filePath = vscode.Uri.joinPath(
-                    vscode.workspace.workspaceFolders[0].uri,
-                    fileName,
-                );
-                const newUri = vscode.Uri.file(fileName).with({
-                    scheme: 'untitled',
-                    path: filePath.fsPath,
-                });
-                await vscode.workspace
-                    .openTextDocument(newUri)
-                    .then(async (doc) => {
-                        await vscode.window
-                            .showTextDocument(doc)
-                            .then(async (editor) => {
-                                await editor.edit((edit) => {
-                                    edit.insert(
-                                        new vscode.Position(0, 0),
-                                        petJson,
-                                    );
-                                });
-                            });
-                    });
-            },
-        ),
-    );
-
-    context.subscriptions.push(
-        vscode.commands.registerCommand(
-            'vscode-pets.import-pet-list',
-            async () => {
-                const options: vscode.OpenDialogOptions = {
-                    canSelectMany: false,
-                    openLabel: 'Open pets.json',
-                    filters: {
-                        json: ['json'],
-                    },
-                };
-                const fileUri = await vscode.window.showOpenDialog(options);
-
-                if (fileUri && fileUri[0]) {
-                    console.log('Selected file: ' + fileUri[0].fsPath);
-                    try {
-                        const fileContents = await vscode.workspace.fs.readFile(
-                            fileUri[0],
-                        );
-                        const petsToLoad = JSON.parse(
-                            String.fromCharCode.apply(
-                                null,
-                                Array.from(fileContents),
-                            ),
-                        );
-
-                        // load the pets into the collection
-                        var collection = PetSpecification.collectionFromMemento(
-                            context,
-                            getConfiguredSize(),
-                        );
-                        // fetch just the pet types
-                        const panel = getPetPanel();
-                        for (let i = 0; i < petsToLoad.length; i++) {
-                            const pet = petsToLoad[i];
-                            const petSpec = new PetSpecification(
-                                normalizeColor(pet.color, pet.type),
-                                pet.type,
-                                pet.size,
-                                pet.name,
-                            );
-                            collection.push(petSpec);
-                            if (panel !== undefined) {
-                                panel.spawnPet(petSpec);
-                            }
-                        }
-                        await storeCollectionAsMemento(context, collection);
-                    } catch (e: any) {
-                        await vscode.window.showErrorMessage(
-                            vscode.l10n.t(
-                                'Failed to import pets: {0}',
-                                e?.message,
-                            ),
-                        );
-                    }
-                }
-            },
-        ),
-    );
-
-    context.subscriptions.push(
-        vscode.commands.registerCommand('vscode-pets.spawn-pet', async () => {
-            const panel = getPetPanel();
-            if (
-                getConfigurationPosition() === ExtPosition.explorer &&
-                webviewViewProvider
-            ) {
-                await vscode.commands.executeCommand('petsView.focus');
-            }
-            if (panel) {
-                const selectedPetType = await vscode.window.showQuickPick(
-                    localize.stringListAsQuickPickItemList<PetType>(ALL_PETS),
-                    {
-                        placeHolder: vscode.l10n.t('Select a pet'),
-                    },
-                );
-                if (selectedPetType === undefined) {
-                    console.log(
-                        'Cancelled Spawning Pet - No Pet Type Selected',
-                    );
-                    return;
-                }
-                var petColor: PetColor = DEFAULT_COLOR;
-                const possibleColors = availableColors(selectedPetType.value);
-
-                if (possibleColors.length > 1) {
-                    var selectedColor = await vscode.window.showQuickPick(
-                        localize.stringListAsQuickPickItemList<PetColor>(
-                            possibleColors,
-                        ),
-                        {
-                            placeHolder: vscode.l10n.t('Select a color'),
-                        },
-                    );
-                    if (selectedColor === undefined) {
-                        return;
-                    }
-                    petColor = selectedColor.value;
-                } else {
-                    petColor = possibleColors[0];
-                }
-
-                if (petColor === undefined) {
-                    return;
-                }
-
-                const name = await vscode.window.showInputBox({
-                    placeHolder: vscode.l10n.t('Leave blank for a random name'),
-                    prompt: vscode.l10n.t('Name your pet'),
-                    value: randomName(selectedPetType.value),
-                });
-                const spec = new PetSpecification(
-                    petColor,
-                    selectedPetType.value,
-                    getConfiguredSize(),
-                    name,
-                );
-                if (!spec.type || !spec.color || !spec.size) {
-                    return vscode.window.showWarningMessage(
-                        vscode.l10n.t('Cancelled Spawning Pet'),
-                    );
-                } else if (spec) {
-                    panel.spawnPet(spec);
-                }
-                var collection = PetSpecification.collectionFromMemento(
-                    context,
-                    getConfiguredSize(),
-                );
-                collection.push(spec);
-                await storeCollectionAsMemento(context, collection);
-            } else {
-                await createPetPlayground(context);
-                await vscode.window.showInformationMessage(
-                    vscode.l10n.t(
-                        "A Pet Playground has been created. You can now use the 'Spawn Additional Pet' Command to add more pets.",
-                    ),
-                );
-            }
-        }),
-    );
-
-    context.subscriptions.push(
-        vscode.commands.registerCommand(
-            'vscode-pets.remove-all-pets',
+            'vscode-pets.push-message',
             async () => {
                 const panel = getPetPanel();
-                if (panel !== undefined) {
-                    panel.resetPets();
-                    await storeCollectionAsMemento(context, []);
-                } else {
-                    await createPetPlayground(context);
-                    await vscode.window.showInformationMessage(
-                        vscode.l10n.t(
-                            "A Pet Playground has been created. You can now use the 'Remove All Pets' Command to remove all pets.",
-                        ),
-                    );
+                const message = await vscode.window.showInputBox({
+                    placeHolder: vscode.l10n.t('Type a message'),
+                    prompt: vscode.l10n.t('Say hello'),
+                });
+                if (panel !== undefined && !!message) {
+                    panel.sendPushMessage(message);
                 }
             },
         ),
@@ -798,6 +544,7 @@ interface IPetPanel {
     updatePetSize(newSize: PetSize): void;
     updateTheme(newTheme: Theme, themeKind: vscode.ColorThemeKind): void;
     update(): void;
+    sendPushMessage(msg: string): void;
     setThrowWithMouse(newThrowWithMouse: boolean): void;
 }
 
@@ -929,6 +676,23 @@ class PetWebviewContainer implements IPetPanel {
 
     public update() {}
 
+    public async enterChat() {
+        const session = await getSession();
+        if (session && session.accessToken) {
+            void this.getWebview().postMessage({
+                command: 'enter-chat',
+                accessToken: session.accessToken,
+            });
+        }
+    }
+
+    public sendPushMessage(message: string) {
+        void this.getWebview().postMessage({
+            command: 'push-message',
+            message,
+        });
+    }
+
     protected _getHtmlForWebview(webview: vscode.Webview) {
         // Local path to main script run in the webview
         const scriptPathOnDisk = vscode.Uri.joinPath(
@@ -959,6 +723,15 @@ class PetWebviewContainer implements IPetPanel {
             ),
         );
 
+        const pusherLibPath = webview.asWebviewUri(
+            vscode.Uri.joinPath(
+                this._extensionUri,
+                'media',
+                'dependencies',
+                'pusher.min.js',
+            ),
+        );
+
         // Uri to load styles into webview
         const stylesResetUri = webview.asWebviewUri(styleResetPath);
         const stylesMainUri = webview.asWebviewUri(stylesPathMainPath);
@@ -979,7 +752,7 @@ class PetWebviewContainer implements IPetPanel {
 					Use a content security policy to only allow loading images from https or from our extension directory,
 					and only allow scripts that have a specific nonce.
 				-->
-				<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src ${
+				<meta http-equiv="Content-Security-Policy" content="default-src 'none'; connect-src *; style-src ${
                     webview.cspSource
                 } 'nonce-${nonce}'; img-src ${
             webview.cspSource
@@ -1000,6 +773,7 @@ class PetWebviewContainer implements IPetPanel {
 				<canvas id="petCanvas"></canvas>
 				<div id="petsContainer"></div>
 				<div id="foreground"></div>	
+        <script nonce="${nonce}" src="${pusherLibPath}"></script>
 				<script nonce="${nonce}" src="${scriptUri}"></script>
 				<script nonce="${nonce}">petApp.petPanelApp("${basePetUri}", "${this.theme()}", ${this.themeKind()}, "${this.petColor()}", "${this.petSize()}", "${this.petType()}", ${this.throwBallWithMouse()});</script>
 			</body>
@@ -1237,6 +1011,7 @@ function getNonce() {
     return text;
 }
 
+// eslint-disable-next-line no-unused-vars
 async function createPetPlayground(context: vscode.ExtensionContext) {
     const spec = PetSpecification.fromConfiguration();
     PetPanel.createOrShow(
