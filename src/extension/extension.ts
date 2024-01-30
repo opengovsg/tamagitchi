@@ -407,7 +407,7 @@ export function activate(context: vscode.ExtensionContext) {
         ),
     );
 
-    void webviewViewProvider.enterChat();
+    void webviewViewProvider.enterChat('');
 
     context.subscriptions.push(
         vscode.commands.registerCommand(
@@ -676,12 +676,13 @@ class PetWebviewContainer implements IPetPanel {
 
     public update() {}
 
-    public async enterChat() {
+    public async enterChat(eggInfo: string) {
         const session = await getSession();
         if (session && session.accessToken) {
             void this.getWebview().postMessage({
                 command: 'enter-chat',
                 accessToken: session.accessToken,
+                eggInfo,
             });
         }
     }
