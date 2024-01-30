@@ -15,6 +15,9 @@ export function initPusher(accessToken: string) {
             headers: {
                 Authorization: 'Bearer ' + accessToken,
             },
+            params: {
+                eggInfo: 'hello',
+            },
         },
     });
 

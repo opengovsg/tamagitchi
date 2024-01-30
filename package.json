@@ -59,6 +59,11 @@
                 "title": "Terminate",
                 "category": "Tamagitchi",
                 "icon": "media/dog.svg"
+            },
+            {
+              "command": "vscode-pets.push-message",
+              "title": "Say something",
+              "category": "Tamagitchi"
             }
         ],
         "configuration": [
