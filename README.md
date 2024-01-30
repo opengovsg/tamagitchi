@@ -1,6 +1,6 @@
 <div align='center'>
 
-# VS Code Pets
+# VS Code Pets fake update
 
 ![icon](https://github.com/tonybaloney/vscode-pets/raw/master/icon.png)
 </div>    
