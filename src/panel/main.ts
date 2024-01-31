@@ -683,7 +683,7 @@ export function petPanelApp(
                                 .locate(userId)
                                 ?.pet.showSpeechBubble(
                                     `${userId}:\n${data.message}`,
-                                    3,
+                                    3000,
                                 );
                         } else if (data.type === 'evolve') {
                             allPets
