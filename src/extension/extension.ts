@@ -338,6 +338,11 @@ async function refreshEgg(ctx: vscode.ExtensionContext) {
         return;
     }
     panel?.updateMyEgg({ evolution, costume: currentCostume });
+    panel?.sendPushMessage({
+        type: 'evolve',
+        evolution,
+        costume: currentCostume,
+    });
 }
 async function resetEgg(ctx: vscode.ExtensionContext) {
     const session = await getSession();
