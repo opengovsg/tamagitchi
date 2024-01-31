@@ -1,6 +1,6 @@
 <div align='center'>
 
-# VS Code Pets
+# VS Code Pets evolve
 
 ![icon](https://github.com/tonybaloney/vscode-pets/raw/master/icon.png)
 </div>    
