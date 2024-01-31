@@ -153,6 +153,7 @@ img.pet {
   text-wrap: wrap;
   word-break: break-all;
   overflow: hidden;
+  white-space: pre;
 }
 
 /* .bubble-nano {

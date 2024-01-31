@@ -283,6 +283,10 @@ function recoverState(
             }
         }
     });
+    stateApi?.postMessage({
+        command: 'reenter',
+        text: '',
+    });
 }
 
 function randomStartPosition(): number {
@@ -636,9 +640,6 @@ export function petPanelApp(
                 }
                 break;
             case 'enter-chat':
-                if (entered) {
-                    break;
-                }
                 const channel = initPusher(
                     message.accessToken,
                     message.eggInfo,
@@ -726,7 +727,6 @@ export function petPanelApp(
                         saveState(stateApi);
                     }
                 });
-                entered = true;
         }
     });
 }

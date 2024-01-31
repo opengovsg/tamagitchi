@@ -807,6 +807,8 @@ function handleWebviewMessage(message: WebviewMessage) {
         case 'info':
             void vscode.window.showInformationMessage(message.text);
             return;
+        case 'reenter':
+            entered = false;
     }
 }
 
