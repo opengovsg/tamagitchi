@@ -676,10 +676,15 @@ export function petPanelApp(
                         // eslint-disable-next-line @typescript-eslint/naming-convention
                         { user_id: userId }: { user_id: string },
                     ) {
+                        console.log('new message', userId, data);
                         if (data.type === 'speech') {
+                            console.log(allPets.locate(userId)?.pet);
                             allPets
                                 .locate(userId)
-                                ?.pet.showSpeechBubble(data.message, 3);
+                                ?.pet.showSpeechBubble(
+                                    `${userId}:\n${data.message}`,
+                                    3,
+                                );
                         } else if (data.type === 'evolve') {
                             allPets
                                 .locate(userId)
@@ -691,8 +696,9 @@ export function petPanelApp(
                     },
                 );
                 channel.bind('pusher:member_added', (member: any) => {
+                    console.log(member);
                     const { evolution, costume, username } = JSON.parse(
-                        member.eggInfo,
+                        member.info.eggInfo,
                     ) as EggInfo;
                     allPets.push(
                         addPetToPanel(
@@ -711,7 +717,9 @@ export function petPanelApp(
                 });
 
                 channel.bind('pusher:member_removed', (member: any) => {
-                    const { username } = JSON.parse(member.eggInfo) as EggInfo;
+                    const { username } = JSON.parse(
+                        member.info.eggInfo,
+                    ) as EggInfo;
                     const pet = allPets.locate(username);
                     if (pet) {
                         allPets.remove(username);
