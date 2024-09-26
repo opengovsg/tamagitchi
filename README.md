@@ -1,5 +1,7 @@
 <div align='center'>
 
+Test 
+
 # VS Code Pets
 
 ![icon](https://github.com/tonybaloney/vscode-pets/raw/master/icon.png)
